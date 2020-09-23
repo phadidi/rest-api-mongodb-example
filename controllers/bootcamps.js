@@ -8,51 +8,7 @@ const Bootcamp = require('../models/bootcamp');
 // @route   GET /api/v1/bootcamps
 // @access  Public
 exports.getBootcamps = asyncMiddleware(async (req, res, next) => {
-  let query;
-  const reqQuery = { ...req.query };
-  const specialParams = ['select', 'sort', 'page', 'limit'];
-  specialParams.forEach((param) => delete reqQuery[param]);
-  let queryStr = JSON.stringify(reqQuery);
-  queryStr = queryStr.replace(
-    /\b(gt|gte|lt|lte|in)\b/g,
-    (match) => `$${match}`
-  );
-  query = Bootcamp.find(JSON.parse(queryStr)).populate('courses');
-
-  if (req.query.select) {
-    const fields = req.query.select.split(',').join(' ');
-    query = query.select(fields);
-  }
-  if (req.query.sort) {
-    const sortBy = req.query.sort.split(',').join(' ');
-    query = query.sort('fields');
-  } else query = query.sort('-createdAt');
-  const page = parseInt(req.query.page, 10) || 1; // default at first page
-  const limit = parseInt(req.query.limit, 10) || 25; // default at 100 per page
-  const start = (page - 1) * limit;
-  const end = page * limit;
-  const total = await Bootcamp.countDocuments();
-  query = query.skip(start).limit(limit);
-  const bootcamps = await query;
-  const pagination = {};
-  if (end < total) {
-    pagination.next = {
-      page: page + 1,
-      limit,
-    };
-  }
-  if (start > 0) {
-    pagination.prev = {
-      page: page - 1,
-      limit,
-    };
-  }
-  res.status(200).json({
-    success: true,
-    pagination,
-    count: bootcamps.length,
-    data: bootcamps,
-  });
+  res.status(200).json(res.advancedResults);
 });
 
 // @desc    Get a Bootcamp by ID (V1)
@@ -134,15 +90,14 @@ exports.updloadBootcampPhoto = asyncMiddleware(async (req, res, next) => {
     );
   }
 
-  // Make sure user is bootcamp owner --> TODO: include this with user model
-  // if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
-  //   return next(
-  //     new ErrorResponse(
-  //       `User ${req.user.id} is not authorized to update this bootcamp`,
-  //       401
-  //     )
-  //   );
-  // }
+  if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    return next(
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to update this bootcamp`,
+        401
+      )
+    );
+  }
 
   if (!req.files) {
     return next(new ErrorResponse(`Please include a valid image file`, 400));
@@ -176,9 +131,6 @@ exports.updloadBootcampPhoto = asyncMiddleware(async (req, res, next) => {
 
     await Bootcamp.findByIdAndUpdate(req.params.id, { photo: file.name });
 
-    res.status(200).json({
-      success: true,
-      data: file.name,
-    });
+    res.status(200).json({ success: true, data: file.name });
   });
 });

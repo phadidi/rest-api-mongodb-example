@@ -10,8 +10,13 @@ const {
   getBootcampsInRadius,
   updloadBootcampPhoto,
 } = require('../controllers/bootcamps');
+const Bootcamp = require('../models/bootcamp');
+const advancedResults = require('../middleware/advancedResults');
 
-router.route('/').get(getBootcamps).post(addBootcamp);
+router
+  .route('/')
+  .get(advancedResults(Bootcamp, 'courses'), getBootcamps)
+  .post(addBootcamp);
 router
   .route('/:id')
   .get(getBootcampById)
