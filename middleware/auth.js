@@ -1,28 +1,52 @@
-const express = require('express');
-const {
-  register,
-  login,
-  logout,
-  getMe,
-  forgotPassword,
-  resetPassword,
-  updateDetails,
-  updatePassword,
-  confirmEmail,
-} = require('../controllers/auth');
+const jwt = require('jsonwebtoken');
+const asyncHandler = require('./async');
+const ErrorResponse = require('../utils/errorResponse');
+const User = require('../models/User');
 
-const router = express.Router();
+// Protect routes
+exports.protect = asyncHandler(async (req, res, next) => {
+  let token;
 
-const { protect } = require('../middleware/auth');
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    // Set token from Bearer token in header
+    token = req.headers.authorization.split(' ')[1];
+    // Set token from cookie
+  }
+  // else if (req.cookies.token) {
+  //   token = req.cookies.token;
+  // }
 
-router.post('/register', register);
-router.post('/login', login);
-router.get('/logout', logout);
-router.get('/me', protect, getMe);
-router.get('/confirmemail', confirmEmail);
-router.put('/updatedetails', protect, updateDetails);
-router.put('/updatepassword', protect, updatePassword);
-router.post('/forgotpassword', forgotPassword);
-router.put('/resetpassword/:resettoken', resetPassword);
+  // Make sure token exists
+  if (!token) {
+    return next(new ErrorResponse('Unauthorized access', 401));
+  }
 
-module.exports = router;
+  try {
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = await User.findById(decoded.id);
+
+    next();
+  } catch (err) {
+    return next(new ErrorResponse('Unauthorized access', 401));
+  }
+});
+
+// Grant access to specific roles
+exports.authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new ErrorResponse(
+          `Users with role ${req.user.role} cannot access this route`,
+          403
+        )
+      );
+    }
+    next();
+  };
+};

@@ -7,7 +7,7 @@ const {
   updateCourseById,
   removeCourseById,
 } = require('../controllers/courses');
-const Course = require('../models/Course');
+const Course = require('../models/course');
 const advancedResults = require('../middleware/advancedResults');
 
 router

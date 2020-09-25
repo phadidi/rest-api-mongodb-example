@@ -1,13 +1,13 @@
 const crypto = require('crypto');
 const ErrorResponse = require('../utils/errorResponse');
-const asyncHandler = require('../middleware/async');
+const asyncMiddleware = require('../middleware/async');
 const sendEmail = require('../utils/sendEmail');
-const User = require('../models/User');
+const User = require('../models/user');
 
-// @desc      Register user
+// @desc      Register a User (V1)
 // @route     POST /api/v1/auth/register
 // @access    Public
-exports.register = asyncHandler(async (req, res, next) => {
+exports.register = asyncMiddleware(async (req, res, next) => {
   const { name, email, password, role } = req.body;
 
   // Create user
@@ -39,10 +39,10 @@ exports.register = asyncHandler(async (req, res, next) => {
   sendTokenResponse(user, 200, res);
 });
 
-// @desc      Login user
+// @desc      Log a User in (V1)
 // @route     POST /api/v1/auth/login
 // @access    Public
-exports.login = asyncHandler(async (req, res, next) => {
+exports.login = asyncMiddleware(async (req, res, next) => {
   const { email, password } = req.body;
 
   // Validate emil & password
@@ -72,7 +72,7 @@ exports.login = asyncHandler(async (req, res, next) => {
 // @desc      Log user out / clear cookie
 // @route     GET /api/v1/auth/logout
 // @access    Public
-exports.logout = asyncHandler(async (req, res, next) => {
+exports.logout = asyncMiddleware(async (req, res, next) => {
   res.cookie('token', 'none', {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
@@ -84,10 +84,10 @@ exports.logout = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc      Get current logged in user
+// @desc      Get Current User (V1)
 // @route     GET /api/v1/auth/me
 // @access    Private
-exports.getMe = asyncHandler(async (req, res, next) => {
+exports.getMe = asyncMiddleware(async (req, res, next) => {
   // user is already available in req due to the protect middleware
   const user = req.user;
 
@@ -100,7 +100,7 @@ exports.getMe = asyncHandler(async (req, res, next) => {
 // @desc      Update user details
 // @route     PUT /api/v1/auth/updatedetails
 // @access    Private
-exports.updateDetails = asyncHandler(async (req, res, next) => {
+exports.updateDetails = asyncMiddleware(async (req, res, next) => {
   const fieldsToUpdate = {
     name: req.body.name,
     email: req.body.email,
@@ -120,7 +120,7 @@ exports.updateDetails = asyncHandler(async (req, res, next) => {
 // @desc      Update password
 // @route     PUT /api/v1/auth/updatepassword
 // @access    Private
-exports.updatePassword = asyncHandler(async (req, res, next) => {
+exports.updatePassword = asyncMiddleware(async (req, res, next) => {
   const user = await User.findById(req.user.id).select('+password');
 
   // Check current password
@@ -137,7 +137,7 @@ exports.updatePassword = asyncHandler(async (req, res, next) => {
 // @desc      Forgot password
 // @route     POST /api/v1/auth/forgotpassword
 // @access    Public
-exports.forgotPassword = asyncHandler(async (req, res, next) => {
+exports.forgotPassword = asyncMiddleware(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
 
   if (!user) {
@@ -183,7 +183,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 // @desc      Reset password
 // @route     PUT /api/v1/auth/resetpassword/:resettoken
 // @access    Public
-exports.resetPassword = asyncHandler(async (req, res, next) => {
+exports.resetPassword = asyncMiddleware(async (req, res, next) => {
   // Get hashed token
   const resetPasswordToken = crypto
     .createHash('sha256')
@@ -213,7 +213,7 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
  * @route   GET /api/v1/auth/confirmemail
  * @access  Public
  */
-exports.confirmEmail = asyncHandler(async (req, res, next) => {
+exports.confirmEmail = asyncMiddleware(async (req, res, next) => {
   // grab token from email
   const { token } = req.query;
 
