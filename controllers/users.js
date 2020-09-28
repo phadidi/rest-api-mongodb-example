@@ -12,7 +12,7 @@ exports.getUsers = asyncMiddleware(async (req, res, next) => {
 // @desc      Get single user
 // @route     GET /api/v1/users/:id
 // @access    Private/Admin
-exports.getUser = asyncMiddleware(async (req, res, next) => {
+exports.getUserById = asyncMiddleware(async (req, res, next) => {
   const user = await User.findById(req.params.id);
 
   res.status(200).json({
@@ -36,7 +36,7 @@ exports.createUser = asyncMiddleware(async (req, res, next) => {
 // @desc      Update user
 // @route     PUT /api/v1/users/:id
 // @access    Private/Admin
-exports.updateUser = asyncMiddleware(async (req, res, next) => {
+exports.updateUserById = asyncMiddleware(async (req, res, next) => {
   const user = await User.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -51,7 +51,7 @@ exports.updateUser = asyncMiddleware(async (req, res, next) => {
 // @desc      Delete user
 // @route     DELETE /api/v1/users/:id
 // @access    Private/Admin
-exports.deleteUser = asyncMiddleware(async (req, res, next) => {
+exports.deleteUserById = asyncMiddleware(async (req, res, next) => {
   await User.findByIdAndDelete(req.params.id);
 
   res.status(200).json({
