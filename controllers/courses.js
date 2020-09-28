@@ -37,6 +37,8 @@ exports.getCourseById = asyncMiddleware(async (req, res, next) => {
 // @route   POST /api/v1/bootcamps/:bootcampId/courses
 // @access  Private
 exports.addCourse = asyncMiddleware(async (req, res, next) => {
+  req.body.bootcamp = req.params.bootcampId;
+  req.body.user = req.user.id;
   const bootcamp = await Bootcamp.findById(req.params.bootcampId);
   if (!bootcamp)
     return next(
@@ -45,7 +47,13 @@ exports.addCourse = asyncMiddleware(async (req, res, next) => {
         404
       )
     );
-  req.body.bootcamp = req.params.bootcampId;
+  if (bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin')
+    return next(
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to add a course to bootcamp ${bootcamp._id}`,
+        401
+      )
+    );
   const course = await Course.create(req.body);
   res.status(201).json({ success: true, data: course });
 });
@@ -54,25 +62,52 @@ exports.addCourse = asyncMiddleware(async (req, res, next) => {
 // @route   PUT /api/v1/courses/:id
 // @access  Private
 exports.updateCourseById = asyncMiddleware(async (req, res, next) => {
-  const course = await Course.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
+  let course = await Course.findById(req.params.id);
   if (!course) {
     return next(
       new ErrorResponse(`No course found for id ${req.params.id}`, 404)
     );
-  } else res.status(200).json({ success: true, data: course });
+  } else if (
+    course.user.toString() !== req.user.id &&
+    req.user.role !== 'admin'
+  ) {
+    return next(
+      new ErrorResponse(
+        `User "${req.user.id}" is not authorized to update course "${course._id}"`,
+        401
+      )
+    );
+  } else {
+    course = await Course.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    course.save();
+    res.status(200).json({ success: true, data: course });
+  }
 });
 
 // @desc    Remove a Course by ID (V1)
 // @route   DELETE /api/v1/courses/:id
 // @access  Private
 exports.removeCourseById = asyncMiddleware(async (req, res, next) => {
-  const course = await Course.findByIdAndRemove(req.params.id);
+  const course = await Course.findById(req.params.id);
   if (!course) {
     return next(
       new ErrorResponse(`No course found for id ${req.params.id}`, 404)
     );
-  } else res.status(200).json({ success: true, data: course });
+  } else if (
+    course.user.toString() !== req.user.id &&
+    req.user.role !== 'admin'
+  ) {
+    return next(
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to delete course ${course._id}`,
+        401
+      )
+    );
+  } else {
+    await course.remove();
+    res.status(200).json({ success: true, data: course });
+  }
 });
