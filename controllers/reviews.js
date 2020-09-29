@@ -31,7 +31,9 @@ exports.getReviewById = asyncMiddleware(async (req, res, next) => {
   });
 
   if (!review) {
-    return next(new ErrorResponse(`No review with id "${req.params.id}"`, 404));
+    return next(
+      new ErrorResponse(`No review with the id of ${req.params.id}`, 404)
+    );
   }
 
   res.status(200).json({
@@ -51,7 +53,10 @@ exports.addReview = asyncMiddleware(async (req, res, next) => {
 
   if (!bootcamp) {
     return next(
-      new ErrorResponse(`No bootcamp with id "${req.params.bootcampId}"`, 404)
+      new ErrorResponse(
+        `No bootcamp with id "${req.params.bootcampId}" found`,
+        404
+      )
     );
   }
 
@@ -71,7 +76,7 @@ exports.updateReviewById = asyncMiddleware(async (req, res, next) => {
 
   if (!review) {
     return next(
-      new ErrorResponse(`No review with the id "${req.params.id}"`, 404)
+      new ErrorResponse(`No review with the id of ${req.params.id}`, 404)
     );
   }
 
@@ -101,7 +106,7 @@ exports.deleteReviewById = asyncMiddleware(async (req, res, next) => {
 
   if (!review) {
     return next(
-      new ErrorResponse(`No review with the id "${req.params.id}"`, 404)
+      new ErrorResponse(`No review with the id of ${req.params.id}`, 404)
     );
   }
 
@@ -114,6 +119,6 @@ exports.deleteReviewById = asyncMiddleware(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    data: {},
+    data: review,
   });
 });

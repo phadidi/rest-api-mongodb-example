@@ -56,6 +56,6 @@ exports.deleteUserById = asyncMiddleware(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    data: {},
+    data: user,
   });
 });
