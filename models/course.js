@@ -20,7 +20,7 @@ const CourseSchema = new mongoose.Schema({
     required: [true, 'Please include a valid minimum skill level'],
     enum: ['beginner', 'intermediate', 'advanced'],
   },
-  scholarshipAvailable: { type: Boolean, default: false },
+  scholarshipsAvailable: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
   bootcamp: { type: mongoose.Schema.ObjectId, ref: 'Bootcamp', required: true },
 });
